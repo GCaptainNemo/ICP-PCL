@@ -36,18 +36,12 @@ keyboardEventOccurred(const pcl::visualization::KeyboardEvent& event,
 	}
 }
 
-void read_pcds(PointCloudT::Ptr cloud_target, PointCloudT::Ptr cloud_source, 
-	const char * target_address, const char * source_address)
+void read_pcds(PointCloudT::Ptr cloud_target, const char * target_address)
 {
 	if (pcl::io::loadPCDFile(target_address, *cloud_target) < 0)
 	{
 		PCL_ERROR("Error loading cloud %s.\n");
 	}
-	if (pcl::io::loadPCDFile(source_address, *cloud_source) < 0)
-	{
-		PCL_ERROR("Error loading cloud %s.\n");
-	}
-	
 }
 
 void transform(double theta, PointCloudT::Ptr cloud_target, PointCloudT::Ptr cloud_source) 
@@ -68,35 +62,11 @@ void transform(double theta, PointCloudT::Ptr cloud_target, PointCloudT::Ptr clo
 	print4x4Matrix(transformation_matrix);
 }
 
-int
-main()
+int visualize(PointCloudT::Ptr cloud_source, PointCloudT::Ptr cloud_target, PointCloudT::Ptr cloud_tr)
 {
-	// The point clouds we will be using
-	PointCloudT::Ptr cloud_target(new PointCloudT);  // Original point cloud
-	PointCloudT::Ptr cloud_tr(new PointCloudT);  // Transformed point cloud
-	PointCloudT::Ptr cloud_source(new PointCloudT);  // ICP output point cloud
-
-	const char * target_address = "../resources/pcd/0.pcd";
-	const char * source_address = "../resources/pcd/10.pcd";
-	read_pcds(cloud_target, cloud_source, target_address, source_address);
-
-
-	int iterations = 1;  // Default number of ICP iterations
-
 	pcl::console::TicToc time;
-	time.tic();
-			
-	std::cout << "\nLoaded file " << "mesh_without_color-2.ply" << " (" << cloud_target->size() << " points) in " << time.toc() << " ms\n" << std::endl;
-
-	// Defining a rotation matrix and translation vector
 	Eigen::Matrix4d transformation_matrix = Eigen::Matrix4d::Identity();
-
-	
-	// Executing the transformation
-	*cloud_tr = *cloud_source;  // We backup cloud_source into cloud_tr for later use
-
-	// The Iterative Closest Point algorithm
-	time.tic();
+	int iterations = 1;
 	pcl::IterativeClosestPoint<PointT, PointT> icp;
 	icp.setMaximumIterations(iterations);
 	icp.setInputSource(cloud_source);
@@ -200,5 +170,29 @@ main()
 		next_iteration = false;
 	}
 	std::cout << "after icp iteration " << cloud_source->points.size() << std::endl;
+}
+
+int main()
+{
+	// The point clouds we will be using
+	PointCloudT::Ptr cloud_target(new PointCloudT);  // Original point cloud
+	PointCloudT::Ptr cloud_tr(new PointCloudT);  // Transformed point cloud
+	PointCloudT::Ptr cloud_source(new PointCloudT);  // ICP output point cloud
+
+	const char * target_address = "../resources/pcd/0.pcd";
+	const char * source_address = "../resources/pcd/100.pcd";
+	read_pcds(cloud_source, source_address);
+	read_pcds(cloud_target, target_address);
+
+
+
+	std::cout << "\nLoaded file " << "mesh_without_color-2.ply" << " (" << cloud_target->size() << " points) " << std::endl;
+
+	*cloud_tr = *cloud_source;  // We backup cloud_source into cloud_tr for later use
+	
+	if (visualize(cloud_source, cloud_target, cloud_tr) == -1) 
+	{
+		return -1;
+	}
 	return (0);
 }
