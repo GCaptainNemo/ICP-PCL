@@ -76,8 +76,8 @@ main()
 	PointCloudT::Ptr cloud_tr(new PointCloudT);  // Transformed point cloud
 	PointCloudT::Ptr cloud_source(new PointCloudT);  // ICP output point cloud
 
-	const char * target_address = "0.pcd";
-	const char * source_address = "10.pcd";
+	const char * target_address = "../resources/pcd/0.pcd";
+	const char * source_address = "../resources/pcd/10.pcd";
 	read_pcds(cloud_target, cloud_source, target_address, source_address);
 
 

@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 3.3.1)
 set(CMAKE_CXX_FLAGS "-std=c++11")
 set(CMAKE_CXX_FLAGS "/EHsc ${CMAKE_CXX_FLAGS}")
 
-PROJECT("surface_reconstruction")
+PROJECT("pc_registration")
 
 # PCL
 find_package(PCL REQUIRED)
