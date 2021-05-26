@@ -181,8 +181,10 @@ int main()
 
 	const char * target_address = "../resources/pcd/0.pcd";
 	const char * source_address = "../resources/pcd/100.pcd";
-	read_pcds(cloud_source, source_address);
+//	read_pcds(cloud_source, source_address);
 	read_pcds(cloud_target, target_address);
+
+	transform(M_PI / 8, cloud_target, cloud_source);
 
 
 
