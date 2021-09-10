@@ -7,6 +7,7 @@
 #include <pcl/registration/icp.h>
 #include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/console/time.h>   // TicToc
+#include "../include/plane_fitting.h"
 
 typedef pcl::PointXYZ PointT;
 typedef pcl::PointCloud<PointT> PointCloudT;
@@ -62,6 +63,39 @@ void transform(double theta, PointCloudT::Ptr cloud_target, PointCloudT::Ptr clo
 	print4x4Matrix(transformation_matrix);
 }
 
+void transform_source(PointCloudT::Ptr cloud_source)
+{
+	Eigen::Matrix4d transformation_matrix = Eigen::Matrix4d::Identity();
+	// A rotation matrix 
+	transformation_matrix(0, 0) = 0.99440256;
+	transformation_matrix(1, 0) = -0.10628782;
+	transformation_matrix(2, 0) = -0.02411303;
+
+	transformation_matrix(0, 1) = 0.10218425;
+	transformation_matrix(1, 1) = 0.98646072;
+	transformation_matrix(2, 1) = -0.13140601;
+	
+	transformation_matrix(0, 2) = 0.03774522;
+	transformation_matrix(1, 2) = 0.1280165;
+	transformation_matrix(2, 2) = 0.99155707;
+
+	/*transformation_matrix(1, 3) = -0.15136226;
+	transformation_matrix(2, 3) = -0.1868385;
+	transformation_matrix(3, 3) = -0.02836975;
+*/
+	transformation_matrix(1, 3) = -6.2303412e-04;
+	transformation_matrix(2, 3) = 5.3596579e-04;
+	transformation_matrix(3, 3) = 2.5333374e-06;
+	// transformation_matrix = transformation_matrix.inverse();
+
+	pcl::transformPointCloud(*cloud_source, *cloud_source, transformation_matrix);
+
+	// Display in terminal the transformation matrix
+	std::cout << "Applying this rigid transformation to: cloud_in -> cloud_icp" << std::endl;
+	print4x4Matrix(transformation_matrix);
+}
+
+
 int visualize(PointCloudT::Ptr cloud_source, PointCloudT::Ptr cloud_target, PointCloudT::Ptr cloud_tr)
 {
 	pcl::console::TicToc time;
@@ -112,11 +146,13 @@ int visualize(PointCloudT::Ptr cloud_source, PointCloudT::Ptr cloud_target, Poin
 
 	// ICP aligned point cloud is red
 	pcl::visualization::PointCloudColorHandlerCustom<PointT> cloud_icp_color_h(cloud_source, 180, 20, 20);
+	
 	viewer.addPointCloud(cloud_source, cloud_icp_color_h, "cloud_icp_v2", v2);
 
 	// Adding text descriptions in each viewport
-	viewer.addText("White: Original point cloud\nGreen: Matrix transformed point cloud", 10, 15, 16, txt_gray_lvl, txt_gray_lvl, txt_gray_lvl, "icp_info_1", v1);
-	viewer.addText("White: Original point cloud\nRed: ICP aligned point cloud", 10, 15, 16, txt_gray_lvl, txt_gray_lvl, txt_gray_lvl, "icp_info_2", v2);
+	viewer.addText("White: Target point cloud\nGreen: Source point cloud", 10, 15, 16, txt_gray_lvl, txt_gray_lvl, txt_gray_lvl, "icp_info_1", v1);
+	//viewer.addText("White: Target point cloud\nRed: ICP aligned point cloud", 10, 15, 16, txt_gray_lvl, txt_gray_lvl, txt_gray_lvl, "icp_info_2", v2);
+	viewer.addText("White: Target point cloud\nRed: Transform Source point cloud used IMU", 10, 15, 16, txt_gray_lvl, txt_gray_lvl, txt_gray_lvl, "icp_info_2", v2);
 
 	std::stringstream ss;
 	ss << iterations;
@@ -179,19 +215,33 @@ int main()
 	PointCloudT::Ptr cloud_tr(new PointCloudT);  // Transformed point cloud
 	PointCloudT::Ptr cloud_source(new PointCloudT);  // ICP output point cloud
 
+
+	//const char * target_address = "../resources/pcd/70.pcd";
+	//plane_fitting(target_address, 900);
+	//const char * source_address = "../resources/pcd/70.pcd";
+	//read_pcds(cloud_source, source_address);
+	
+	//const char * target_address = "_0.pcd";
 	const char * target_address = "../resources/pcd/0.pcd";
-	const char * source_address = "../resources/pcd/100.pcd";
-//	read_pcds(cloud_source, source_address);
+
+	//plane_fitting(target_address, 900);
 	read_pcds(cloud_target, target_address);
 
-	transform(M_PI / 8, cloud_target, cloud_source);
+	//const char * source_address = "all_plane_70.pcd";
+	const char * source_address = "../resources/pcd/139.pcd";
 
-
-
-	std::cout << "\nLoaded file " << "mesh_without_color-2.ply" << " (" << cloud_target->size() << " points) " << std::endl;
+	read_pcds(cloud_source, source_address);
+	//transform_source(cloud_source);
+	
+	// transform_source(cloud_target);
+	
+	//read_pcds(cloud_target, target_address);
+	//// transform(M_PI / 8, cloud_target, cloud_source);
+	//std::cout << "\nLoaded file " << "mesh_without_color-2.ply" << " (" << cloud_target->size() << " points) " << std::endl;
 
 	*cloud_tr = *cloud_source;  // We backup cloud_source into cloud_tr for later use
-	
+	transform_source(cloud_source);
+	//
 	if (visualize(cloud_source, cloud_target, cloud_tr) == -1) 
 	{
 		return -1;
