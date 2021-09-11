@@ -1,3 +1,6 @@
 *.pcd
 *.ply
 Project1/build/
+Project1/resources/
+docs/.ipynb_checkpoints/
+
