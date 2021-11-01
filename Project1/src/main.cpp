@@ -118,6 +118,45 @@ void transform_source(POINTCLOUDPTR cloud_source)
 	print4x4Matrix(transformation_matrix);
 }
 
+template <class ICP_type>
+void ICP_choose(const char * option, PointCloudT::Ptr cloud_source,
+	PointCloudT::Ptr cloud_target, ICP_type icp)
+{
+	if (strcmp(option, "point2point") == 0) 
+	{
+		icp->setMaximumIterations(1);
+		icp->setInputSource(cloud_source);
+		icp->setInputTarget(cloud_target);
+		icp->align(*cloud_source);
+	}
+	else if (strcmp(option, "point2plane") == 0) 
+	{
+		pcl::PointCloud<pcl::PointXYZNormal>::Ptr cloud_source_normals(
+			new pcl::PointCloud<pcl::PointNormal>());
+		pcl::PointCloud<pcl::PointXYZNormal>::Ptr cloud_target_normals(
+			new pcl::PointCloud<pcl::PointNormal>());
+		pcl::PointCloud<pcl::PointXYZNormal>::Ptr cloud_source_trans_normals(
+			new pcl::PointCloud<pcl::PointNormal>());
+
+		addNormal(tar, cloud_target_normals);
+		addNormal(src, cloud_source_normals);
+
+		pcl::IterativeClosestPointWithNormals<pcl::PointNormal>,
+			pcl::PointNormal >::Ptr
+			icp(new pcl::IterativeClosestPointWithNormals<pcl::PointNormal,
+				pcl::PointNormal>());
+		icp->setTransformationEpsilon(0.0000000001);
+		icp->setMaxCorrespondenceDistance(2.0);
+		icp->setMaximumIterations(50);
+		icp->setRANSACIterations(20);
+		icp->setInputSource(cloud_source_normals); //
+		icp->setInputTarget(cloud_target_normals);
+		icp->align(*cloud_source_trans_normals, guess); //
+	}
+
+
+}
+
 int visualize(PointCloudColor::Ptr cloud_source_color, PointCloudColor::Ptr cloud_target_color, 
 	PointCloudColor::Ptr cloud_tr_color)
 {
@@ -127,19 +166,24 @@ int visualize(PointCloudColor::Ptr cloud_source_color, PointCloudColor::Ptr clou
 	xyzrgb2xyz(cloud_source_color, cloud_source);
 	xyzrgb2xyz(cloud_target_color, cloud_target);
 	xyzrgb2xyz(cloud_tr_color, cloud_tr);
-
-
+	// //////////////////////////////////////////////////////
+	// 
+	// //////////////////////////////////////////////////////
 
 	pcl::console::TicToc time;
 	Eigen::Matrix4d transformation_matrix = Eigen::Matrix4d::Identity();
 	int iterations = 1;
-	pcl::IterativeClosestPoint<PointT, PointT> icp;
-	icp.setMaximumIterations(iterations);
-	icp.setInputSource(cloud_source);
-	icp.setInputTarget(cloud_target);
-	icp.align(*cloud_source);
-	icp.setMaximumIterations(1);  // We set this variable to 1 for the next time we will call .align () function
-	std::cout << "Applied " << iterations << " ICP iteration(s) in " << time.toc() << " ms" << std::endl;
+	const char * option = "point2point";
+	pcl::IterativeClosestPoint<PointT, PointT> * icp; 
+	ICP_choose<pcl::IterativeClosestPoint<PointT, PointT> *>(option, cloud_source, cloud_target, icp);
+
+	//pcl::IterativeClosestPoint<PointT, PointT> icp;
+	//icp.setMaximumIterations(iterations);
+	//icp.setInputSource(cloud_source);
+	//icp.setInputTarget(cloud_target);
+	//icp.align(*cloud_source);
+	//icp.setMaximumIterations(1);  // We set this variable to 1 for the next time we will call .align () function
+	//std::cout << "Applied " << iterations << " ICP iteration(s) in " << time.toc() << " ms" << std::endl;
 
 	if (icp.hasConverged())
 	{

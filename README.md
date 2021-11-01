@@ -17,7 +17,7 @@ ICP算法对点云密度差不不大时配准效果较好(和初始点选择有�
 
 [1] [csdn-ICP原理与PCL代码实现](https://blog.csdn.net/qq_29462849/article/details/85080518)
 
-[2] [csdn-PCL点云配准](https://blog.csdn.net/weixin_44379406/article/details/115694022)
+[2] [github-ICP点云配准](https://github.com/seven-linglx/icp)
 
  
 

@@ -20,6 +20,10 @@ ${PROJECT_SOURCE_DIR} src/main.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SRC})
+add_executable(ICP_bags src/icp.cpp)
 target_link_libraries(${PROJECT_NAME} 
+${PCL_LIBRARIES}
+)
+target_link_libraries(ICP_bags
 ${PCL_LIBRARIES}
 )
